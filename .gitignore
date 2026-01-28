@@ -1,0 +1,22 @@
+# Local overrides (machine-specific)
+*.local
+*.local.conf
+
+# Secrets
+.env
+.env.*
+*.key
+*.pem
+id_rsa*
+id_ed25519*
+
+# Editor
+*.swp
+*.swo
+*~
+.*.un~
+
+# OS
+.DS_Store
+Thumbs.db
+.claude/

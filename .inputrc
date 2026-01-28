@@ -1,0 +1,82 @@
+# =============================================================================
+# .inputrc - Readline Configuration
+# =============================================================================
+# Configures the GNU Readline library used by bash and other programs.
+# Affects command-line editing behavior, completion, and history navigation.
+#
+# Test changes: Run 'bind -f ~/.inputrc' or start new shell
+# =============================================================================
+
+# =============================================================================
+# Editing Mode
+# =============================================================================
+# Uncomment for vi editing mode (default is emacs mode)
+# set editing-mode vi
+
+# =============================================================================
+# Completion Behavior
+# =============================================================================
+# Case-insensitive completion (a matches A)
+set completion-ignore-case on
+
+# Show all completions on first Tab press instead of waiting for second
+set show-all-if-ambiguous on
+set show-all-if-unmodified on
+
+# Complete the common prefix before cycling through matches
+set menu-complete-display-prefix on
+
+# =============================================================================
+# Display Options
+# =============================================================================
+# Color-code completions by file type (like ls --color)
+set colored-stats on
+
+# Show / after directories in completion
+set mark-directories on
+set mark-symlinked-directories on
+
+# Show file type indicator in completion (*/=@|)
+set visible-stats on
+
+# Expand ~ to $HOME immediately
+set expand-tilde on
+
+# =============================================================================
+# Bell
+# =============================================================================
+# Disable terminal bell on completion
+set bell-style none
+
+# =============================================================================
+# Key Bindings
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# History Search
+# -----------------------------------------------------------------------------
+# Up/Down arrows search history for commands starting with current input
+# Type "git" then press Up to find previous git commands
+"\e[A": history-search-backward
+"\e[B": history-search-forward
+
+# -----------------------------------------------------------------------------
+# Word Movement
+# -----------------------------------------------------------------------------
+# Ctrl+Left/Right to move by word
+"\e[1;5C": forward-word
+"\e[1;5D": backward-word
+
+# -----------------------------------------------------------------------------
+# Word Deletion
+# -----------------------------------------------------------------------------
+# Ctrl+Delete to delete word forward
+"\e[3;5~": kill-word
+# Ctrl+Backspace to delete word backward
+"\C-h": backward-kill-word
+
+# -----------------------------------------------------------------------------
+# Screen
+# -----------------------------------------------------------------------------
+# Ctrl+L clears screen (standard, but explicit)
+"\C-l": clear-screen

@@ -1,0 +1,118 @@
+#!/bin/bash
+# =============================================================================
+# yadm bootstrap - Post-Clone Setup
+# =============================================================================
+# This script runs automatically after 'yadm clone'.
+# It sets up directories and optionally installs packages.
+#
+# Run manually: yadm bootstrap
+# Skip on clone: yadm clone --no-bootstrap <url>
+# =============================================================================
+
+set -e  # Exit on error
+
+echo "==> Running yadm bootstrap..."
+
+# =============================================================================
+# OS Detection
+# =============================================================================
+if [[ -f /etc/os-release ]]; then
+    # shellcheck source=/dev/null
+    source /etc/os-release
+    OS=$ID
+else
+    OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+fi
+
+echo "==> Detected OS: $OS"
+
+# =============================================================================
+# Package Installation
+# =============================================================================
+install_packages() {
+    local packages=(
+        tmux            # Terminal multiplexer
+        vim-enhanced    # Vim with more features (vim on Debian)
+        git             # Version control
+        htop            # Process viewer
+        tree            # Directory tree
+        jq              # JSON processor
+        bash-completion # Tab completion
+    )
+
+    case "$OS" in
+        almalinux|rhel|centos|rocky|fedora)
+            echo "==> Installing packages with dnf..."
+            # vim-enhanced is RHEL name, already in list
+            sudo dnf install -y "${packages[@]}"
+            ;;
+        debian|ubuntu)
+            echo "==> Installing packages with apt..."
+            # Replace vim-enhanced with vim for Debian
+            packages=("${packages[@]/vim-enhanced/vim}")
+            sudo apt update
+            sudo apt install -y "${packages[@]}"
+            ;;
+        opensuse*|sles)
+            echo "==> Installing packages with zypper..."
+            packages=("${packages[@]/vim-enhanced/vim}")
+            sudo zypper install -y "${packages[@]}"
+            ;;
+        arch|manjaro)
+            echo "==> Installing packages with pacman..."
+            packages=("${packages[@]/vim-enhanced/vim}")
+            sudo pacman -S --noconfirm "${packages[@]}"
+            ;;
+        *)
+            echo "==> Unknown OS '$OS', skipping package installation"
+            echo "    Install manually: tmux vim git htop tree jq bash-completion"
+            return 1
+            ;;
+    esac
+}
+
+# =============================================================================
+# Directory Setup
+# =============================================================================
+setup_directories() {
+    echo "==> Creating XDG directories..."
+
+    # User binaries (added to PATH in .bash_profile)
+    mkdir -p "$HOME/.local/bin"
+
+    # XDG Base Directory Specification
+    mkdir -p "$HOME/.config"
+    mkdir -p "$HOME/.cache"
+    mkdir -p "$HOME/.local/share"
+
+    echo "    Created ~/.local/bin, ~/.config, ~/.cache, ~/.local/share"
+}
+
+# =============================================================================
+# Main
+# =============================================================================
+main() {
+    # Always create directories
+    setup_directories
+
+    # Optionally install packages (requires sudo)
+    if command -v sudo &>/dev/null; then
+        echo ""
+        read -p "Install packages (tmux, vim, git, htop, etc.)? [y/N] " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            install_packages
+        else
+            echo "==> Skipping package installation"
+        fi
+    else
+        echo "==> sudo not available, skipping package installation"
+        echo "    Ask your administrator to install: tmux vim git htop tree jq"
+    fi
+
+    echo ""
+    echo "==> Bootstrap complete!"
+    echo "    Restart your shell or run: source ~/.bashrc"
+}
+
+main "$@"
