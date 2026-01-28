@@ -1,40 +1,19 @@
 # =============================================================================
-# .bashrc - Interactive Shell Configuration
+# 00-dotfiles.sh - Dotfiles Configuration
 # =============================================================================
-# Sourced for interactive non-login shells.
+# Sourced by ~/.bashrc via ~/.bashrc.d/ mechanism.
+# This file adds QoL improvements without conflicting with system defaults.
 #
-# Structure:
-#   1. Early exit for non-interactive
-#   2. History configuration
-#   3. Shell options
-#   4. Prompt
-#   5. Aliases
-#   6. Functions
-#   7. Environment variables
-#   8. Completions
-#   9. Local overrides
-#
-# Local customizations: ~/.bashrc.local (gitignored)
+# Local overrides: ~/.bashrc.d/99-local.sh (gitignored)
 # =============================================================================
-
-# Exit early if not interactive (scripts, scp, etc.)
-[[ $- != *i* ]] && return
 
 # =============================================================================
 # History
 # =============================================================================
-# Store 10k commands in memory, 20k in file
 HISTSIZE=10000
 HISTFILESIZE=20000
-
-# ignoreboth = ignorespace + ignoredups
-# erasedups  = remove older duplicate entries
 HISTCONTROL=ignoreboth:erasedups
-
-# Don't record these commands (noise reduction)
 HISTIGNORE="ls:cd:cd -:pwd:exit:clear:history"
-
-# Append to history file instead of overwriting
 shopt -s histappend
 
 # =============================================================================
@@ -43,28 +22,23 @@ shopt -s histappend
 shopt -s checkwinsize   # Update LINES/COLUMNS after each command
 shopt -s globstar       # ** matches directories recursively (bash 4+)
 shopt -s cdspell        # Autocorrect minor cd typos
-shopt -s dirspell       # Autocorrect directory name typos in completion
+shopt -s dirspell       # Autocorrect directory name typos
 shopt -s autocd         # Type directory name to cd into it
-shopt -s cmdhist        # Save multi-line commands as single history entry
+shopt -s cmdhist        # Save multi-line commands as single entry
 
 # =============================================================================
 # Prompt
 # =============================================================================
-# ANSI color codes wrapped in \[ \] for proper line length calculation
 RED='\[\e[0;31m\]'
 GREEN='\[\e[0;32m\]'
 YELLOW='\[\e[0;33m\]'
 BLUE='\[\e[0;34m\]'
-CYAN='\[\e[0;36m\]'
 RESET='\[\e[0m\]'
 
-# Extract current git branch (if in a repo)
 __git_branch() {
     git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
 }
 
-# Prompt format: user@host:path (branch)$
-# Green user@host, blue path, yellow branch
 PS1="${GREEN}\u@\h${RESET}:${BLUE}\w${RESET}${YELLOW}\$(__git_branch)${RESET}\$ "
 
 # =============================================================================
@@ -75,30 +49,24 @@ alias ...='cd ../..'
 alias ....='cd ../../..'
 
 # =============================================================================
-# Aliases - Listing
+# Aliases - Listing (only if not already defined)
 # =============================================================================
-# Prefer exa/eza if available, fall back to ls with colors
-if command -v exa &>/dev/null; then
-    alias ls='exa'
-    alias l='exa -la --git'
-    alias ll='exa -l'
-    alias la='exa -la'
-    alias lt='exa -laT --level=2'
-elif ls --color=auto &>/dev/null 2>&1; then
-    alias ls='ls --color=auto'
-    alias l='ls -lAh'
-    alias ll='ls -lh'
-    alias la='ls -lAh'
-else
-    # Fallback for systems without GNU ls
-    alias l='ls -lA'
-    alias ll='ls -l'
-    alias la='ls -lA'
+# Don't override if user has custom 'l' function
+if ! type -t l &>/dev/null | grep -q function; then
+    if command -v eza &>/dev/null; then
+        alias l='eza -la --git'
+        alias ll='eza -l'
+        alias la='eza -la'
+        alias lt='eza -laT --level=2'
+    elif command -v exa &>/dev/null; then
+        alias l='exa -la --git'
+        alias ll='exa -l'
+        alias la='exa -la'
+        alias lt='exa -laT --level=2'
+    fi
 fi
 
-# =============================================================================
-# Aliases - Grep
-# =============================================================================
+# Color grep
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
@@ -106,7 +74,6 @@ alias egrep='egrep --color=auto'
 # =============================================================================
 # Aliases - Safety
 # =============================================================================
-# Prompt before overwriting (remove -i if you find it annoying)
 alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
@@ -117,7 +84,7 @@ alias mv='mv -i'
 alias c='clear'
 alias h='history'
 alias j='jobs -l'
-alias path='echo -e ${PATH//:/\\n}'       # Print PATH entries, one per line
+alias path='echo -e ${PATH//:/\\n}'
 alias now='date +"%Y-%m-%d %H:%M:%S"'
 
 # =============================================================================
@@ -130,16 +97,16 @@ alias tn='tmux new -s'
 alias tk='tmux kill-session -t'
 
 # =============================================================================
-# Aliases - System Info
+# Aliases - System
 # =============================================================================
-alias df='df -h'                          # Human-readable sizes
+alias df='df -h'
 alias du='du -h'
 alias free='free -h'
-alias ports='ss -tulanp'                  # Show listening ports
-alias myip='curl -s ifconfig.me'          # Public IP address
+alias ports='ss -tulanp'
+alias myip='curl -s ifconfig.me'
 
 # =============================================================================
-# Aliases - Git
+# Aliases - Git (only if not using custom git tool)
 # =============================================================================
 if command -v git &>/dev/null; then
     alias g='git'
@@ -155,15 +122,10 @@ fi
 # =============================================================================
 # Functions
 # =============================================================================
-
-# Create directory and cd into it
-# Usage: mkcd mydir
 mkcd() {
     mkdir -p "$1" && cd "$1"
 }
 
-# Extract various archive formats
-# Usage: extract archive.tar.gz
 extract() {
     if [[ -f "$1" ]]; then
         case "$1" in
@@ -185,39 +147,20 @@ extract() {
     fi
 }
 
-# Create timestamped backup of a file
-# Usage: backup important.conf
-# Result: important.conf.bak.20240115143022
 backup() {
     cp "$1" "$1.bak.$(date +%Y%m%d%H%M%S)"
 }
 
 # =============================================================================
-# Environment Variables
+# Environment (only set if not already configured)
 # =============================================================================
-export EDITOR='vim'
-export VISUAL='vim'
-export PAGER='less'
-export LESS='-R --mouse'    # -R: interpret ANSI colors, --mouse: scroll support
+# Respect user's editor preference (nvim, vim, etc.)
+[[ -z "$EDITOR" ]] && export EDITOR='vim'
+[[ -z "$VISUAL" ]] && export VISUAL="$EDITOR"
+[[ -z "$PAGER" ]] && export PAGER='less'
+export LESS='-R --mouse'
 
-# XDG Base Directory Specification
-# https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+# XDG directories
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
-
-# =============================================================================
-# Completions
-# =============================================================================
-# Enable programmable completion features
-if [[ -f /etc/bash_completion ]]; then
-    source /etc/bash_completion
-elif [[ -f /usr/share/bash-completion/bash_completion ]]; then
-    source /usr/share/bash-completion/bash_completion
-fi
-
-# =============================================================================
-# Local Overrides
-# =============================================================================
-# Machine-specific settings go here (this file is gitignored)
-[[ -f ~/.bashrc.local ]] && source ~/.bashrc.local

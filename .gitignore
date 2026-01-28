@@ -1,6 +1,7 @@
 # Local overrides (machine-specific)
 *.local
 *.local.conf
+.bashrc.d/99-local.sh
 
 # Secrets
 .env
