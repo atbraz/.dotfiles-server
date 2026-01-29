@@ -154,8 +154,15 @@ backup() {
 # =============================================================================
 # Environment (only set if not already configured)
 # =============================================================================
-# Respect user's editor preference (nvim, vim, etc.)
-[[ -z "$EDITOR" ]] && export EDITOR='vim'
+# Neovim from /opt (installed via bootstrap)
+[[ -d /opt/nvim-linux-x86_64/bin ]] && export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
+
+# Prefer nvim over vim when available
+if command -v nvim &>/dev/null; then
+    [[ -z "$EDITOR" ]] && export EDITOR='nvim'
+else
+    [[ -z "$EDITOR" ]] && export EDITOR='vim'
+fi
 [[ -z "$VISUAL" ]] && export VISUAL="$EDITOR"
 [[ -z "$PAGER" ]] && export PAGER='less'
 export LESS='-R --mouse'

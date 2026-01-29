@@ -16,6 +16,7 @@ id_ed25519*
 *.swo
 *~
 .*.un~
+.config/nvim/init.lua.local
 
 # OS
 .DS_Store
